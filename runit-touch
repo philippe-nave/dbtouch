@@ -1,0 +1,8 @@
+#!/bin/bash
+#
+# Run the container to an interactive shell prompt
+#
+
+# --rm option cleans up the container file system upon exit
+#   (housekeeping)
+docker run --env-file ./env.list --rm dbtouch 

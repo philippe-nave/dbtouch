@@ -1,0 +1,19 @@
+#!/bin/bash
+#
+# Create a table if it doesn't exist, add a row
+#
+
+mysql -h ${DBENDPOINT} -P 3306 -u ${DBUSER} -p${DBPASSWORD} ${DATABASE} <<EOF
+CREATE TABLE IF NOT EXISTS dockerlog (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  container varchar(200) default null,
+  accesstime DATETIME,
+  primary key (id),
+  unique key ID_UNIQUE (id)
+  ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+  
+insert into dockerlog (container, accesstime) values ("$HOSTNAME",now());
+select * from dockerlog;
+quit
+EOF
+
