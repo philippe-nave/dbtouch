@@ -1,0 +1,79 @@
+This is a little demonstration Docker project that creates an
+instance that uses MySQL client software to connect to a database
+and update a table.
+
+You'll notice that one file is missing: env.list
+
+The env.list file is a simple name=value list that defines the
+environmental variables used to establish the database connection.
+For obvious reasons, this is not included, but the format of the 
+file is very simple:
+
+# environment variables to be passed into docker container
+DBENDPOINT=servername
+DBUSER=dbuser
+DBPASSWORD=dbpassword
+DATABASE=dbname
+
+Your values are unique to your database setup, of course.
+
+The Dockerfile is very simple:
+
+
+FROM ubuntu:12.04
+
+# Install dependencies
+RUN apt-get update -y
+RUN apt-get -y install mysql-client
+
+# Install app
+# RUN rm -rf /var/www/*
+ADD scripts /home/scripts
+
+CMD ["/home/scripts/touchdb"]
+
+
+We start with an Ubuntu base, update it with any new changes,
+and then install the MySQL client software. The 'scripts'
+directory is then copied into /home/scripts, and then the
+default command is set to run the 'touchdb' script.
+
+You do need to have a database defined and available for this
+to work, but you don't need to set up the table beforehand.
+The 'touchdb' script does that for you:
+
+
+#!/bin/bash
+#
+# Create a table if it doesn't exist, add a row
+#
+
+mysql -h ${DBENDPOINT} -P 3306 -u ${DBUSER} -p${DBPASSWORD} ${DATABASE} <<EOF
+CREATE TABLE IF NOT EXISTS dockerlog (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  container varchar(200) default null,
+  accesstime DATETIME,
+  primary key (id),
+  unique key ID_UNIQUE (id)
+  ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+
+insert into dockerlog (container, accesstime) values ("$HOSTNAME",now());
+select * from dockerlog;
+quit
+EOF
+
+
+If you don't have a 'dockerlog' table, this script creates it - and
+then it just pops in a row logging the Docker container's hostname
+and the date/time the row was inserted. You can look in your database
+at your 'dockerlog' table to see this information and verify that
+the database connection worked.
+
+There are two scripts provided for running this thing: runit-touch and
+runit-bash. Executing runit-touch just runs the default command (which
+adds the row to the database), and runit-bash runs the container and
+drops you into a shell. Both scripts use --env-file to invoke your
+env.list file of environment variables and both scripts use --rm to
+clean up after the container is finished running.
+
+That's about all there is to it!
