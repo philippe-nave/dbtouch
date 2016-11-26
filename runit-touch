@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Run the container to an interactive shell prompt
+# Run the container with default command (update database)
 #
 
 # --rm option cleans up the container file system upon exit
